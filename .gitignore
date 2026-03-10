@@ -1,0 +1,27 @@
+# Git ignore for DJ Booking Platform
+
+# Uploaded user content (don't commit actual uploads)
+uploads/music/*
+uploads/profile/*
+!uploads/music/.gitkeep
+!uploads/profile/.gitkeep
+
+# IDE & editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Composer (if used in future)
+vendor/
+composer.lock
+
+# Local environment overrides
+config/local.php
+
+# Logs
+*.log
+error_log

@@ -1,0 +1,71 @@
+# DJ Booking Platform — Apache Configuration
+# Security, URL rewriting, and PHP settings
+
+Options -Indexes
+RewriteEngine On
+RewriteBase /dj-booking-platform/
+
+# ── Security Headers ─────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ── Block access to sensitive directories ────────────────────────────────────
+RewriteRule ^config/(.*)$ - [F,L]
+RewriteRule ^\.git/        - [F,L]
+RewriteRule ^\.htaccess    - [F,L]
+
+# ── Prevent direct access to upload directory listing ────────────────────────
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# ── Prevent execution of PHP in uploads directory ────────────────────────────
+<Directory "uploads">
+    <FilesMatch "\.php$">
+        Order Deny,Allow
+        Deny from all
+    </FilesMatch>
+</Directory>
+
+# ── PHP Settings ─────────────────────────────────────────────────────────────
+<IfModule mod_php.c>
+    php_value upload_max_filesize 50M
+    php_value post_max_size 52M
+    php_value max_execution_time 120
+    php_value memory_limit 256M
+    php_flag session.cookie_httponly on
+    php_flag session.use_only_cookies on
+</IfModule>
+
+# ── Block common attack patterns ──────────────────────────────────────────────
+<IfModule mod_rewrite.c>
+    # Block SQL injection patterns in query strings
+    RewriteCond %{QUERY_STRING} (union.*select|select.*from|insert.*into|drop.*table) [NC]
+    RewriteRule .* - [F,L]
+
+    # Block XSS patterns
+    RewriteCond %{QUERY_STRING} (<script|javascript:|on\w+=) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# ── Cache Control for static assets ──────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                  "access plus 1 month"
+    ExpiresByType application/javascript    "access plus 1 month"
+    ExpiresByType image/jpeg                "access plus 1 month"
+    ExpiresByType image/png                 "access plus 1 month"
+    ExpiresByType image/webp                "access plus 1 month"
+    ExpiresByType audio/mpeg                "access plus 1 week"
+</IfModule>
+
+# ── Compress responses ────────────────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
